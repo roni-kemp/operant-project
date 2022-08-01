@@ -135,12 +135,20 @@ def loop_through_cams(ROI_dct):
         ROIs = ROI_dct[camera_name]
         compare_to_prev(path, camera_name, ROIs, light_dct)
 
-def log_roi():
+## new 
+
+
+def log_roi(path, data):
     """
     function should log all the ROIs so we can troubleshoot later
     and recover if 
     """
-    pass
+    
+    camera_name_lst=['A1', 'A2','B1','B2','C1','C2','D1','D2']
+    with open(path, "a") as logger:
+        for i in range(len(data)):          
+            logger.write(f'{camera_name_lst[i]}:{data[i]}\n')    
+
 
     [((200,0), (10,10)), ((200,0), (10,10))]
 
