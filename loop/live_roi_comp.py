@@ -1,7 +1,7 @@
 import cv2
 import time
 import os
-import RPi.GPIO as GPIO
+# import RPi.GPIO as GPIO
 import numpy as np
 
 def cropping(frame):
@@ -12,7 +12,7 @@ def cropping(frame):
     ROI = cv2.selectROI("SELECT ROI", frame, showCrosshair=True)
 
     x, y, w, h = ROI[0], ROI[1], ROI[2], ROI[3]
-    croped_img = frame[y:y+h,x:x+w]
+    croped_img = frame[y:y+h, x:x+w]
     cv2.destroyWindow("SELECT ROI")
     return croped_img, ROI
 
@@ -44,17 +44,38 @@ def save_init_ROIs(path, camera_name, manual_path = None):
     
     return ROIs_lst
 
+def hsv_plant_filter(img):
+    f_img = img.copy()
+    hsv = cv2.cvtColor(f_img, cv2.COLOR_BGR2HSV) 
+    
+    # Set lower and upper color limits
+    lower_val = np.array([136,89,98])
+    upper_val = np.array([179,151,190])
+    
+    # Threshold the HSV image to get only green colors
+    mask = cv2.inRange(hsv, lower_val, upper_val)
+    
+    # Apply mask to original image - this shows the chosen color with black blackground
+    filtered_hsv = cv2.bitwise_and(f_img, f_img, mask= mask)
+    return filtered_hsv
 
-def compare_2(croped_img,bckgound_img):
+def compare_2(croped_img, bckgound_img):
     """compare 2 imgs and return the number of very different pixls"""
     
-    gray_bkgr = cv2.cvtColor(bckgound_img, cv2.COLOR_BGR2GRAY)
-    gray_curr = cv2.cvtColor(croped_img, cv2.COLOR_BGR2GRAY)
+    ## only look at the green color space - should help when turning on/off blue light    
+    filtered_bckgound_img = hsv_plant_filter(bckgound_img)
+    filtered_croped_img = hsv_plant_filter(croped_img)
+    
+    ## convert both to grayscale
+    gray_bkgr = cv2.cvtColor(filtered_bckgound_img, cv2.COLOR_BGR2GRAY)
+    gray_curr = cv2.cvtColor(filtered_croped_img, cv2.COLOR_BGR2GRAY)
 
+    ## find absolute value diffrence and threshold it
     diff = cv2.absdiff(gray_curr, gray_bkgr)
-    ret,thresh1 = cv2.threshold(diff,27,255,cv2.THRESH_BINARY)
+    ret, thresh = cv2.threshold(diff,27,255,cv2.THRESH_BINARY)
 
-    pix_num = len(np.where(thresh1>0)[0])
+    ## Return the num of diff pixels
+    pix_num = len(np.where(thresh>0)[0])
     return pix_num
 
 
@@ -81,11 +102,11 @@ def compare_to_prev(path, camera_name, ROIs, light_dct):
         diff_pix_num = compare_2(croped_img, bckgound_img)
         
         if diff_pix_num>200:
-            GPIO.output(light_dct[f"{camera_name}_{i+1}"], 1) ## turn off trhe light
+            #GPIO.output(light_dct[f"{camera_name}_{i+1}"], 1) ## turn off trhe light
             print(f"light off{camera_name}_{i+1}")
         else:
-            GPIO.output(light_dct[f"{camera_name}_{i+1}"], 0)
-            
+            #GPIO.output(light_dct[f"{camera_name}_{i+1}"], 0)
+            print("light stays on")
             ## overwrite the old background_img with the updated one
             ## (we do this to take care of noise)
 #             cv2.imwrite(bckgrnd_path, croped_img)
@@ -102,6 +123,8 @@ def get_ROIs_for_all_cams(cam_lst = ["A","B","C","D"]):
     return ROI_dct
 
 
+
+
 def loop_through_cams(ROI_dct):
     
     path = "/home/pi/Desktop/agueda_imgs/__new_imgs__"
@@ -112,17 +135,54 @@ def loop_through_cams(ROI_dct):
         ROIs = ROI_dct[camera_name]
         compare_to_prev(path, camera_name, ROIs, light_dct)
 
+def log_roi():
+    """
+    function should log all the ROIs so we can troubleshoot later
+    and recover if 
+    """
+    pass
 
-GPIO.setmode(GPIO.BOARD)
-GPIO.setwarnings(False)
+    [((200,0), (10,10)), ((200,0), (10,10))]
+
+#%% testing on pc (not pi...)
+
+roni_pc_path = r"C:/Users/Roni/Desktop/Roni_new/python scripts/pavlovian sunflowers/operant-project/operant_imgs/A/07_17__18_07_57.jpg"
+
+
+img = cv2.imread(roni_pc_path)
+
+croped_img, ROI = cropping(img)
+#%%
+
+cv2.namedWindow("testing", cv2.WINDOW_NORMAL)
+cv2.imshow("testing", croped_img)
+cv2.waitKey(1)
+
+#%%
+
+
+
+filt_img = hsv_plant_filter(croped_img)
+#show image
+cv2.namedWindow("testing", cv2.WINDOW_NORMAL)
+cv2.imshow("testing", filt_img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+#%%
+
+
+
+#GPIO.setmode(GPIO.BOARD)
+#GPIO.setwarnings(False)
 
 L1 = 33
 L2 = 40
 L3 = 38 #...
 
-GPIO.setup(L1, GPIO.OUT)
-GPIO.setup(L2, GPIO.OUT)
-GPIO.setup(L3, GPIO.OUT) #(dont forget to add the rest!)
+#GPIO.setup(L1, GPIO.OUT)
+#GPIO.setup(L2, GPIO.OUT)
+#GPIO.setup(L3, GPIO.OUT) #(dont forget to add the rest!)
 
 
 # ROIs = save_init_ROIs(path, camera_name)
