@@ -5,10 +5,10 @@ def nothing(x):
     pass
 
 # Load image
-image = img
+image =  cv.imread(r"C:\Users\Roni\Desktop\1_0017_CROPED.jpg")
 
 # Create a window
-cv2.namedWindow('image')
+cv2.namedWindow("image", cv2.WINDOW_NORMAL)
 
 # Create trackbars for color change
 # Hue is from 0-179 for Opencv
@@ -30,13 +30,16 @@ phMin = psMin = pvMin = phMax = psMax = pvMax = 0
 
 while(1):
     # Get current positions of all trackbars
-    hMin = cv2.getTrackbarPos('HMin', 'image')
-    sMin = cv2.getTrackbarPos('SMin', 'image')
-    vMin = cv2.getTrackbarPos('VMin', 'image')
-    hMax = cv2.getTrackbarPos('HMax', 'image')
-    sMax = cv2.getTrackbarPos('SMax', 'image')
-    vMax = cv2.getTrackbarPos('VMax', 'image')
-
+    try:
+        hMin = cv2.getTrackbarPos('HMin', 'image')
+        sMin = cv2.getTrackbarPos('SMin', 'image')
+        vMin = cv2.getTrackbarPos('VMin', 'image')
+        hMax = cv2.getTrackbarPos('HMax', 'image')
+        sMax = cv2.getTrackbarPos('SMax', 'image')
+        vMax = cv2.getTrackbarPos('VMax', 'image')
+    except cv.error as e:
+        print(f"cv2 error: '''\n{e}'''\nprobably closed window...")
+        break
     # Set minimum and maximum HSV values to display
     lower = np.array([hMin, sMin, vMin])
     upper = np.array([hMax, sMax, vMax])
@@ -57,6 +60,7 @@ while(1):
         pvMax = vMax
 
     # Display result image
+    
     cv2.imshow('image', result)
     if cv2.waitKey(10) & 0xFF == ord('q'):
         break
