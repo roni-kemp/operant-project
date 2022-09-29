@@ -5,7 +5,7 @@ def nothing(x):
     pass
 
 # Load image
-image =  cv.imread(r"C:\Users\Roni\Desktop\1_0017_CROPED.jpg")
+image =  cv.imread(r"C:\Users\Roni\Desktop\1__Croped_1\1_0016_CROPED.jpg")
 
 # Create a window
 cv2.namedWindow("image", cv2.WINDOW_NORMAL)
@@ -64,5 +64,6 @@ while(1):
     cv2.imshow('image', result)
     if cv2.waitKey(10) & 0xFF == ord('q'):
         break
-
+print(f"{lower=}")
+print(f"{upper=}")
 cv2.destroyAllWindows()
