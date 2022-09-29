@@ -11,7 +11,7 @@ class MultiAdapter:
     logging.basicConfig(filename='/home/pi/Desktop/agueda_imgs/example1.log', level=logging.DEBUG)
     
     
-    camNum = 4
+    camNum = 2
     adapter_info = {   "A":{   "i2c_cmd":"i2cset -y 1 0x70 0x00 0x04",
                                 "gpio_sta":[0,0,1],
                         },
@@ -133,8 +133,10 @@ class MultiAdapter:
                 camera.release()
                 cv.destroyAllWindows()
                 break
-
+    
+            
     def save_imgs(self, parent_path, f_name, width,height):
+        was_ok = True
         camera = cv.VideoCapture(0)
         # Check if the folder exists
         # Create empty folders if not
@@ -147,34 +149,23 @@ class MultiAdapter:
                 print("created folder " + chr(65+i))
             else:
                 print("folder exists - " + chr(65+i))
-        # logging data
+        # for logging data
         cnt = 0
-        
-#         print(self.camera.get(cv.CAP_PROP_AUTO_EXPOSURE))
-#         self.camera.set(cv.CAP_PROP_AUTO_EXPOSURE, 1.0)
-#         self.camera.set(cv.CAP_PROP_EXPOSURE, 50000.0)
-#         print(self.camera.get(cv.CAP_PROP_EXPOSURE))
-#         print(self.camera.get(cv.CAP_PROP_AUTO_EXPOSURE))
-        #CAP_PROP_AUTO_EXPOSURE 
-        # Take imgs    
+ 
         for i in range(self.camNum):
             try:
+                time.sleep(1)
                 self.height = height
                 self.width = width
                 self.choose_channel(chr(65+i))
-                time.sleep(0.5)
+                
                 camera.set(3, self.width)
                 camera.set(4, self.height)
-                ## manual brightness controll -needs clock                
-#                 if i == 0:
-#                     camera.set(cv.CAP_PROP_BRIGHTNESS, 20)
-#                 if i == 1:
-#                     camera.set(cv.CAP_PROP_BRIGHTNESS, 20)
-#                 if i == 2:
-#                     camera.set(cv.CAP_PROP_BRIGHTNESS, 50)
-#                 if i == 3:
-#                     camera.set(cv.CAP_PROP_BRIGHTNESS, 50)
+                time.sleep(1)
+                assert camera.isOpened()
+
                 ret, frame = camera.read()
+                
                 if ret == True:
                     directory_name = chr(65+i)
                     path = os.path.join(parent_path, directory_name)
@@ -186,20 +177,35 @@ class MultiAdapter:
                     time.sleep(0.5)
                     cnt += 1
                 else:
-                    print(f"failed {chr(65+i)}")
+                    print(f"failed {chr(65+i)}, try again...")                    
                     my_logging((f_name, directory_name, "failed"))
+                    was_ok = False
+                    break
             
-            except:
+            except AssertionError:
+                print(f"{30*'#'}\n assertion error with video capture\n{30*'#'}")
                 logging.info(30*'-')
                 logging.exception('')
+                was_ok = False
+                break
+            
+            except:
+                
+                print("error when retrying...")
+                was_ok = False
+                logging.info(30*'-')
+                logging.exception('')
+                break
         
-        my_logging(f"{cnt} of 4 worked at {f_name}, temp was {check_temp()} deg.\n")
+        my_logging(f"{cnt} of {self.camNum} worked at {f_name}, temp was {check_temp()} deg.\n")
         camera.release()
+        print(was_ok)
+        return was_ok
 #         for i in range(self.camNum):
 #             self.choose_channel(chr(65+i)) 
 #             self.camera.release()
-
-
+    
+    
 def check_temp():
     result = 0.0
     # The first line in this file holds the CPU temperature as an integer times 1000.
