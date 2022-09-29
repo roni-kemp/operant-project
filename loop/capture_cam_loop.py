@@ -56,15 +56,17 @@ def capture_imgs():
 #     curr_time = "_".join([date,hour,minute, sec])
     
     ## save the img
-    cameras = AdapterBoard.MultiAdapter()
-
-                    #(parent_path, f_name, width,height)
     my_path = "/home/pi/Desktop/agueda_imgs/__new_imgs__"
-    cameras.save_imgs(my_path ,curr_time, 1280, 720)
-    
-#     cv2.imwrite("/home/pi/Desktop/agueda_imgs/imgs/{}.jpg".format(curr_time),frame)
-
-
+    while True:
+        cameras = AdapterBoard.MultiAdapter()    
+        was_ok = cameras.save_imgs(my_path ,curr_time, 1280, 720)
+        if was_ok:
+            
+            break
+        else:
+            print("was not ok... retry...")
+            time.sleep(1)
+    print("was ok! NEXT!")
 ## somthing like this to controll the correct light {"A", (40,33)}
 
 
@@ -76,15 +78,20 @@ print("starting loop-", time.ctime())
 capture_imgs()
 
 print("finished taking first img...\nwaiting for select ROI")
-ROIs_dct = lrc.get_ROIs_for_all_cams(["A"])
-# ROIs_dct = {'A': [(244, 300, 136, 191), (208, 289, 86, 145)], 'B': [(126, 133, 57, 38), (126, 118, 75, 70)], 'C': [(108, 118, 74, 57), (86, 118, 90, 69)], 'D': [(114, 123, 58, 47), (116, 122, 59, 53)]}
+ROIs_dct = lrc.get_ROIs_for_all_cams(["A"])#,"B"])
+lrc.loop_through_cams(ROIs_dct) ## To turn on if not already so
+
+# ROIs_dct = {'A': [(449, 276, 89, 129), (53, 338, 108, 105)]}#, 'B': [(126, 133, 57, 38), (126, 118, 75, 70)], 'C': [(108, 118, 74, 57), (86, 118, 90, 69)], 'D': [(114, 123, 58, 47), (116, 122, 59, 53)]}
 # real_start = start
+
 while True:
 #     if time.perf_counter()- real_start > 60:
 #         break
     if time.perf_counter()- start > 240:
         start = time.perf_counter()
+        
         capture_imgs()
+            
         print("last img was taken at -", time.ctime())
 
         lrc.loop_through_cams(ROIs_dct)
