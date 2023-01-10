@@ -5,38 +5,41 @@ def nothing(x):
     pass
 
 # Load image
-image =  cv.imread(r"C:\Users\Roni\Desktop\1__Croped_1\1_0016_CROPED.jpg")
+image = cv2.imread(r"C:\Users\Roni\Downloads\DSC00726.JPG")
 
-# Create a window
-cv2.namedWindow("image", cv2.WINDOW_NORMAL)
-
+cv2.namedWindow("Trackbars")
 # Create trackbars for color change
 # Hue is from 0-179 for Opencv
-cv2.createTrackbar('HMin', 'image', 0, 179, nothing)
-cv2.createTrackbar('SMin', 'image', 0, 255, nothing)
-cv2.createTrackbar('VMin', 'image', 0, 255, nothing)
-cv2.createTrackbar('HMax', 'image', 0, 179, nothing)
-cv2.createTrackbar('SMax', 'image', 0, 255, nothing)
-cv2.createTrackbar('VMax', 'image', 0, 255, nothing)
+cv2.createTrackbar('HMin', 'Trackbars', 0, 179, nothing)
+cv2.createTrackbar('SMin', 'Trackbars', 0, 255, nothing)
+cv2.createTrackbar('VMin', 'Trackbars', 0, 255, nothing)
+cv2.createTrackbar('HMax', 'Trackbars', 0, 179, nothing)
+cv2.createTrackbar('SMax', 'Trackbars', 0, 255, nothing)
+cv2.createTrackbar('VMax', 'Trackbars', 0, 255, nothing)
 
 # Set default value for Max HSV trackbars
-cv2.setTrackbarPos('HMax', 'image', 179)
-cv2.setTrackbarPos('SMax', 'image', 255)
-cv2.setTrackbarPos('VMax', 'image', 255)
+cv2.setTrackbarPos('HMax', 'Trackbars', 179)
+cv2.setTrackbarPos('SMax', 'Trackbars', 255)
+cv2.setTrackbarPos('VMax', 'Trackbars', 255)
 
 # Initialize HSV min/max values
 hMin = sMin = vMin = hMax = sMax = vMax = 0
 phMin = psMin = pvMin = phMax = psMax = pvMax = 0
 
+
+
+# Create a window
+cv2.namedWindow("image", cv2.WINDOW_NORMAL)
+
 while(1):
     # Get current positions of all trackbars
     try:
-        hMin = cv2.getTrackbarPos('HMin', 'image')
-        sMin = cv2.getTrackbarPos('SMin', 'image')
-        vMin = cv2.getTrackbarPos('VMin', 'image')
-        hMax = cv2.getTrackbarPos('HMax', 'image')
-        sMax = cv2.getTrackbarPos('SMax', 'image')
-        vMax = cv2.getTrackbarPos('VMax', 'image')
+        hMin = cv2.getTrackbarPos('HMin', 'Trackbars')
+        sMin = cv2.getTrackbarPos('SMin', 'Trackbars')
+        vMin = cv2.getTrackbarPos('VMin', 'Trackbars')
+        hMax = cv2.getTrackbarPos('HMax', 'Trackbars')
+        sMax = cv2.getTrackbarPos('SMax', 'Trackbars')
+        vMax = cv2.getTrackbarPos('VMax', 'Trackbars')
     except cv.error as e:
         print(f"cv2 error: '''\n{e}'''\nprobably closed window...")
         break
