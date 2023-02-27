@@ -14,8 +14,8 @@ import live_roi_comp as lrc
 GPIO.setmode(GPIO.BOARD)
 GPIO.setwarnings(False)
 
-L1 = 33
-L2 = 40
+L1 = 12#33
+L2 = 11#40
 
 GPIO.setup(L1, GPIO.OUT)
 GPIO.setup(L2, GPIO.OUT)
@@ -23,7 +23,7 @@ GPIO.setup(L2, GPIO.OUT)
 def save_imgs(parent_path, f_name, width, height):
     was_ok = True
     ## handle folder path 
-    directory_name = "A"
+    directory_name = "B"
     path = os.path.join(parent_path, directory_name)
     ## Check if the folder exists
     ## Create empty folders if not
@@ -74,11 +74,11 @@ def show(ROI_dct):
     cv2.destroyAllWindows()
     my_path = "/home/pi/Desktop/agueda_imgs/__new_imgs__"
 
-    ROIs = ROIs_dct["A"]
+    ROIs = ROIs_dct["B"]
     for i in range(-1,1):
-        img_path = os.listdir(my_path + "/A")[i]
+        img_path = os.listdir(my_path + "/B")[i]
         
-        img = cv2.imread(my_path + f"/A/{img_path}")
+        img = cv2.imread(my_path + f"/B/{img_path}")
         
         for i in range(2):#ROIs:
             ROI = ROIs[i]
@@ -117,13 +117,13 @@ capture_imgs()
 
 print("finished taking first img...\nwaiting for select ROI")
 
-ROIs_dct = lrc.get_ROIs_for_all_cams(["A"])
-light_dct = {"A_1":L1, "A_2":L2}
+ROIs_dct = lrc.get_ROIs_for_all_cams(["B"])
+light_dct = {"B_1":L1, "B_2":L2}
 lrc.loop_through_cams(ROIs_dct, light_dct)
 
 while True:
 
-    if time.perf_counter()- start > 10:
+    if time.perf_counter()- start > 30:
         start = time.perf_counter()
         capture_imgs()
         print("last img was taken at -", time.ctime())
