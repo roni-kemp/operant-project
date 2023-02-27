@@ -5,7 +5,7 @@ def nothing(x):
     pass
 
 # Load image
-image = cv2.imread(r"C:\Users\Roni\Downloads\DSC00726.JPG")
+image = cv2.imread(r"/home/pi/Desktop/agueda_imgs/__new_imgs__/A/09_29__13_42_44.jpg")
 
 cv2.namedWindow("Trackbars")
 # Create trackbars for color change

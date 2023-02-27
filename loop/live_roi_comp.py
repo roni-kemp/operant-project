@@ -117,12 +117,12 @@ def compare_to_prev(path, camera_name, ROIs, light_dct):
         bckgound_img = cv2.imread(bckgrnd_path)
         
         diff_pix_num = compare_2(croped_img, bckgound_img)
-        
-        if diff_pix_num>200:
-            GPIO.output(light_dct[f"{camera_name}_{i+1}"], 1) ## turn off trhe light
+        print("diff= " + str(diff_pix_num))
+        if diff_pix_num>100:
+            GPIO.output(light_dct[f"{camera_name}_{i+1}"], 0) ## turn off trhe light
             print(f"light offl {camera_name}_{i+1}")
         else:
-            GPIO.output(light_dct[f"{camera_name}_{i+1}"], 0)
+            GPIO.output(light_dct[f"{camera_name}_{i+1}"], 1)
             print(f"light stays on {camera_name}_{i+1}")
             ## overwrite the old background_img with the updated one
             ## (we do this to take care of noise)
