@@ -89,7 +89,7 @@ def show(ROI_dct):
 
         img = cv2.resize(img,(int(img.shape[1]/2), int(img.shape[0]/2)))
         cv2.imshow(f"{img_path}",img)
-        cv2.waitKey(1000)
+        cv2.waitKey(10)
 
 def capture_imgs():
     ## get a timestamp for the file name
@@ -123,7 +123,7 @@ lrc.loop_through_cams(ROIs_dct, light_dct)
 
 while True:
 
-    if time.perf_counter()- start > 30:
+    if time.perf_counter()- start > 7:
         start = time.perf_counter()
         capture_imgs()
         print("last img was taken at -", time.ctime())

@@ -29,7 +29,7 @@ def hsv_plant_filter(img):
 # define a video capture object
 vid = cv2.VideoCapture(0)
 
-first_img_path = path + "/A/"+ os.listdir(path + "/A")[-10]
+first_img_path = path + "/B/"+ os.listdir(path + "/B")[0]
 first_img = cv2.imread(first_img_path)
 
 ## only look at the green color space - should help when turning on/off blue light    
