@@ -124,6 +124,8 @@ lrc.loop_through_cams(ROIs_dct, light_dct)
 while True:
 
     if time.perf_counter()- start > 7:
+
+
         start = time.perf_counter()
         capture_imgs()
         print("last img was taken at -", time.ctime())
