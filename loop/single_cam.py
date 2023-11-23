@@ -20,11 +20,8 @@ L2 = 11#40
 GPIO.setup(L1, GPIO.OUT)
 GPIO.setup(L2, GPIO.OUT)
 
-def save_imgs(parent_path, f_name, width, height):
-    was_ok = True
-    ## handle folder path 
-    directory_name = "B"
-    path = os.path.join(parent_path, directory_name)
+
+def create_folder(path):
     ## Check if the folder exists
     ## Create empty folders if not
     if not os.path.isdir(path):
@@ -32,6 +29,17 @@ def save_imgs(parent_path, f_name, width, height):
         print("created folder")
     else:
         print("folder exists")
+
+
+def save_imgs(parent_path, f_name, width, height):
+    # init status
+    was_ok = True
+    
+    ## handle folder path 
+    directory_name = "B"
+    path = os.path.join(parent_path, directory_name)
+    
+    create_folder(path)
     
     camera = cv2.VideoCapture(0)
     
@@ -42,43 +50,37 @@ def save_imgs(parent_path, f_name, width, height):
         if ret == True:
             file_path = path + "//" + f_name +".jpg"
             cv2.imwrite(file_path, frame)
-            print(f"camera was OK")
-#             my_logging((f_name, directory_name, "worked"))
-#             time.sleep(0.5)
-            
+
         else:
             print(f"failed,{f_name} try again...")                    
 #             my_logging((f_name, directory_name, "failed"))
             was_ok = False
-            
-    
+                
     except AssertionError:
         print(f"{30*'#'}\n assertion error with video capture\n{30*'#'}")
-#         logging.info(30*'-')
-#         logging.exception('')
+        ## We should log this
         was_ok = False
         
-    
     except:
         print("error when retrying...")
-#         logging.info(30*'-')
-#         logging.exception('')
         was_ok = False
-        
-
-#     my_logging(f"{cnt} of {self.camNum} worked at {f_name}, temp was {check_temp()} deg.\n")
+        ## We should log this
+    # ADD finnaly?
     camera.release()
     return was_ok
     
-def show(ROI_dct):
+def show(ROI_dct, path):
+    """ 
+    Meant to show a full img of the last capture with the ROIs highlighted
+    """
+    
     cv2.destroyAllWindows()
-    my_path = "/home/pi/Desktop/agueda_imgs/__new_imgs__"
 
     ROIs = ROIs_dct["B"]
     for i in range(-1,1):
-        img_path = os.listdir(my_path + "/B")[i]
+        img_path = os.listdir(path + "/B")[i]
         
-        img = cv2.imread(my_path + f"/B/{img_path}")
+        img = cv2.imread(path + f"/B/{img_path}")
         
         for i in range(2):#ROIs:
             ROI = ROIs[i]
@@ -91,18 +93,16 @@ def show(ROI_dct):
         cv2.imshow(f"{img_path}",img)
         cv2.waitKey(10)
 
-def capture_imgs():
+def capture_imgs(path):
     ## get a timestamp for the file name
-   
     now = datetime.now()
-
     curr_time = now.strftime("%m_%d__%H_%M_%S")
     print("Current Time =", curr_time)
     
-    ## loop and check if there was an error in capturing and saving the img, if so retry
-    my_path = "/home/pi/Desktop/agueda_imgs/__new_imgs__"
+    ## loop and check if there was an error in capturing and saving the img
+    ## if there was an error retry
     while True:
-        was_ok = save_imgs(my_path ,curr_time, 1280, 720)
+        was_ok = save_imgs(path ,curr_time, 1280, 720)
         if was_ok:
             break
         else:
@@ -110,29 +110,31 @@ def capture_imgs():
             time.sleep(2)
     print("was ok! NEXT!")
 
-# # def main():
-start = time.perf_counter()
-print("starting loop-", time.ctime())
-capture_imgs()
 
-print("finished taking first img...\nwaiting for select ROI")
+## def main():
 
-ROIs_dct = lrc.get_ROIs_for_all_cams(["B"])
+## would like to swap this for a relative path in future
+my_path = "/home/pi/Desktop/agueda_imgs/__new_imgs__"
+
+previous_pic_time = time.perf_counter()
+print("starting run", time.ctime())
+
+## Get the first img - used to choose the ROI
+capture_imgs(my_path)
+print("finished taking first img...\nwaiting for select ROI(!)")
+ROIs_dct = lrc.get_ROIs_for_all_cams(["B"], my_path)
+
 light_dct = {"B_1":L1, "B_2":L2}
-lrc.loop_through_cams(ROIs_dct, light_dct)
+lrc.loop_through_cams(ROIs_dct, light_dct, my_path)
 
+## Start the main loop this is the actual experiment
 while True:
-
-    if time.perf_counter()- start > 7:
-
-
-        start = time.perf_counter()
+    ## Save the current the time
+    curr_time = time.perf_counter()
+    ## If more than X seconds past - take a picture, adjust lighting and update the last capture time
+    if curr_time - previous_pic_time > 7:
         capture_imgs()
-        print("last img was taken at -", time.ctime())
-        lrc.loop_through_cams(ROIs_dct, light_dct)
+        print("last img was taken at -", curr_time)
+        lrc.loop_through_cams(ROIs_dct, light_dct, my_path)
         show(ROIs_dct)
-
-
-
-    
-
+        previous_pic_time = curr_time

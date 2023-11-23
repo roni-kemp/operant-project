@@ -7,10 +7,10 @@ import numpy as np
 def cropping(frame):
     ## ROI should ideally only be of black background
 
-    ## select roi and close window
+    ## Open window to select ROI 
     cv2.namedWindow("SELECT ROI", cv2.WINDOW_NORMAL)
     ROI = cv2.selectROI("SELECT ROI", frame, showCrosshair=True)
-
+    ## Parsing ROI to get croped img and close windows 
     x, y, w, h = ROI[0], ROI[1], ROI[2], ROI[3]
     croped_img = frame[y:y+h, x:x+w]
     cv2.destroyWindow("SELECT ROI")
@@ -131,8 +131,7 @@ def compare_to_prev(path, camera_name, ROIs, light_dct):
             ## since the plant will also move slowly it might not make sense to compare to prev img - we need to comp to first img
             ## lets hope the nois does not get too bad 
 
-def get_ROIs_for_all_cams(cam_lst = ["A","B","C","D"]):
-    path = "/home/pi/Desktop/agueda_imgs/__new_imgs__"
+def get_ROIs_for_all_cams(cam_lst = ["A","B","C","D"], path):
     ROI_dct = {}
     for camera_name in cam_lst:
         ROIs = save_init_ROIs(path, camera_name)
@@ -141,12 +140,7 @@ def get_ROIs_for_all_cams(cam_lst = ["A","B","C","D"]):
     return ROI_dct
 
 
-def loop_through_cams(ROI_dct, light_dct):
-    
-    path = "/home/pi/Desktop/agueda_imgs/__new_imgs__"
-    global L1, L2
-    ## update this dct when actually using for then one box!
-    
+def loop_through_cams(ROI_dct, light_dct, path):
     for camera_name in list(ROI_dct.keys()):
         ROIs = ROI_dct[camera_name]
         compare_to_prev(path, camera_name, ROIs, light_dct)
