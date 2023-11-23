@@ -114,7 +114,7 @@ def capture_imgs(path):
 ## def main():
 
 ## would like to swap this for a relative path in future
-my_path = "/home/pi/Desktop/agueda_imgs/__new_imgs__"
+my_path = "/home/pi/Desktop/operant_testing"
 
 previous_pic_time = time.perf_counter()
 print("starting run", time.ctime())
@@ -122,8 +122,12 @@ print("starting run", time.ctime())
 ## Get the first img - used to choose the ROI
 capture_imgs(my_path)
 print("finished taking first img...\nwaiting for select ROI(!)")
-ROIs_dct = lrc.get_ROIs_for_all_cams(["B"], my_path)
+ROIs_dct = lrc.get_ROIs_for_all_cams(my_path, ["B"])
 
+## Allow the user to cancel the ROI selection
+if ROIs_dct == None:
+    exit()
+    
 light_dct = {"B_1":L1, "B_2":L2}
 lrc.loop_through_cams(ROIs_dct, light_dct, my_path)
 

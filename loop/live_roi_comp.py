@@ -4,6 +4,8 @@ import os
 import RPi.GPIO as GPIO
 import numpy as np
 
+manual_stop = False
+
 def cropping(frame):
     ## ROI should ideally only be of black background
 
@@ -14,10 +16,13 @@ def cropping(frame):
     x, y, w, h = ROI[0], ROI[1], ROI[2], ROI[3]
     croped_img = frame[y:y+h, x:x+w]
     cv2.destroyWindow("SELECT ROI")
+    
     return croped_img, ROI
 
 
 def save_init_ROIs(path, camera_name, manual_path = None):
+    global manual_stop
+    
     if manual_path == None:
         curent_path = path + "/" + camera_name
         img_list = os.listdir(curent_path)
@@ -37,6 +42,9 @@ def save_init_ROIs(path, camera_name, manual_path = None):
     ROIs_lst = []
     for i in range(2):
         croped_img, ROI = cropping(img_halfes[i])
+        if ROI == (0, 0, 0, 0):
+            manual_stop = True
+            break
         out_path = path + f"/ROI_{camera_name}_{i+1}.jpg"
         cv2.imwrite(out_path, croped_img)
         cv2.destroyAllWindows()
@@ -131,14 +139,20 @@ def compare_to_prev(path, camera_name, ROIs, light_dct):
             ## since the plant will also move slowly it might not make sense to compare to prev img - we need to comp to first img
             ## lets hope the nois does not get too bad 
 
-def get_ROIs_for_all_cams(cam_lst = ["A","B","C","D"], path):
+def get_ROIs_for_all_cams(path, cam_lst = ["A","B","C","D"]):
+    global manual_stop
+    
     ROI_dct = {}
     for camera_name in cam_lst:
+    
         ROIs = save_init_ROIs(path, camera_name)
         ROI_dct[camera_name] = ROIs
+    if not manual_stop:
+        return ROI_dct
+    else:
+        print("\nyou stopped!")
+        return None
     
-    return ROI_dct
-
 
 def loop_through_cams(ROI_dct, light_dct, path):
     for camera_name in list(ROI_dct.keys()):
