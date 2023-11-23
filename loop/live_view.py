@@ -6,7 +6,6 @@ TO DO:
 add ROI marking to the img
 can use - lrc.load_ROI(path)
 """
-
 import cv2
 import os
 import numpy as np
@@ -30,11 +29,8 @@ gray_bkgr = cv2.cvtColor(filtered_bckgound_img, cv2.COLOR_BGR2GRAY)
 ## add blurring
 gray_bkgr_blur = cv2.blur(gray_bkgr,(5,5))
 
-
 while True:
-    
     # Capture the video frame
-    # by frame
     ret, frame = vid.read()
     
     ## only look at the green color space - should help when turning on/off blue light    

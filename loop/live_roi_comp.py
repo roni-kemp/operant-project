@@ -63,7 +63,6 @@ def load_ROI_dct(path):
             tup = tuple(map(int,line.strip().split(":")[1].strip("(").strip(")").split(', ')))
             roi_lst.append(tup)
     key = line.split(":")[0][0]
-    print(key)
     roi_dct = {key:roi_lst[-2:]}
     return roi_dct
 
@@ -172,11 +171,8 @@ def get_ROIs_for_all_cams(path, cam_lst = ["A","B","C","D"]):
     
         ROIs = save_init_ROIs(path, camera_name)
         ROI_dct[camera_name] = ROIs
-    if not manual_stop:
-        return ROI_dct
-    else:
-        print("\nyou stopped!")
-        return None
+    
+    return ROI_dct
             
 
 def loop_through_cams(ROI_dct, light_dct, path):
@@ -186,6 +182,7 @@ def loop_through_cams(ROI_dct, light_dct, path):
     cv2.destroyAllWindows()
 
 def log_roi(path, data):
+    ## also needs fixing...
     """
     function should log all the ROIs so we can troubleshoot later
     and recover if needed

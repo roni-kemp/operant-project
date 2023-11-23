@@ -125,9 +125,9 @@ capture_imgs(my_path)
 print("finished taking first img...\nwaiting for select ROI(!)")
 ROIs_dct = lrc.get_ROIs_for_all_cams(my_path, ["B"])
 light_dct = {"B_1":L1, "B_2":L2}
-print(ROIs_dct)
 ## Allow the user to cancel the ROI selection
-if ROIs_dct == None:
+if lrc.manual_stop:
+    print("\nyou stopped!")
     exit()
 
 ## To start the loop imidiatly we tweak the previous_pic_time variable
@@ -142,5 +142,5 @@ while True:
         capture_imgs(my_path)
         print("last img was taken at -", curr_time)
         lrc.loop_through_cams(ROIs_dct, light_dct, my_path)
-        show(ROIs_dct, my_path)
+#         show(ROIs_dct, my_path)
         previous_pic_time = curr_time
