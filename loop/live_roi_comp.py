@@ -54,6 +54,20 @@ def save_init_ROIs(path, camera_name, manual_path = None):
     
     return ROIs_lst
 
+
+def load_ROI_dct(path):
+    ## there is a better way to do this - but not now:
+    roi_lst = []
+    with open(path + "/ROI_log.txt", "r") as roi_file:
+        for line in roi_file:
+            tup = tuple(map(int,line.strip().split(":")[1].strip("(").strip(")").split(', ')))
+            roi_lst.append(tup)
+    key = line.split(":")[0][0]
+    print(key)
+    roi_dct = {key:roi_lst[-2:]}
+    return roi_dct
+
+
 def hsv_plant_filter(img):
     f_img = img.copy()
     hsv = cv2.cvtColor(f_img, cv2.COLOR_BGR2HSV) 
@@ -142,6 +156,17 @@ def compare_to_prev(path, camera_name, ROIs, light_dct):
 def get_ROIs_for_all_cams(path, cam_lst = ["A","B","C","D"]):
     global manual_stop
     
+    ## if there already is a ROI file - maybe we can use that!
+    if os.path.isfile(path + "/ROI_log.txt"):
+        user_input = input("\n The file 'ROI_log.txt' already exists...\ndo you want to load that ROI? (Y/n)")
+        if user_input == "y" or user_input == "":
+            print("using existing file")
+            
+            ## continue to load ROI from file
+            ROI_dct = load_ROI_dct(path)
+            return ROI_dct
+        else:
+            "Choose new ROI !"
     ROI_dct = {}
     for camera_name in cam_lst:
     
@@ -152,7 +177,7 @@ def get_ROIs_for_all_cams(path, cam_lst = ["A","B","C","D"]):
     else:
         print("\nyou stopped!")
         return None
-    
+            
 
 def loop_through_cams(ROI_dct, light_dct, path):
     for camera_name in list(ROI_dct.keys()):
@@ -165,7 +190,7 @@ def log_roi(path, data):
     function should log all the ROIs so we can troubleshoot later
     and recover if needed
     """  
-    camera_name_lst=['A1', 'A2','B1','B2','C1','C2','D1','D2']
+    camera_name_lst=['B1','B2','C1','C2','D1','D2']
     with open(path, "a") as logger:
         for i in range(len(data)):          
             logger.write(f'{camera_name_lst[i]}:{data[i]}\n')    

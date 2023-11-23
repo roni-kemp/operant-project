@@ -115,6 +115,7 @@ def capture_imgs(path):
 
 ## would like to swap this for a relative path in future
 my_path = "/home/pi/Desktop/operant_testing"
+time_between_imgs = 7
 
 previous_pic_time = time.perf_counter()
 print("starting run", time.ctime())
@@ -123,22 +124,23 @@ print("starting run", time.ctime())
 capture_imgs(my_path)
 print("finished taking first img...\nwaiting for select ROI(!)")
 ROIs_dct = lrc.get_ROIs_for_all_cams(my_path, ["B"])
-
+light_dct = {"B_1":L1, "B_2":L2}
+print(ROIs_dct)
 ## Allow the user to cancel the ROI selection
 if ROIs_dct == None:
     exit()
-    
-light_dct = {"B_1":L1, "B_2":L2}
-lrc.loop_through_cams(ROIs_dct, light_dct, my_path)
+
+## To start the loop imidiatly we tweak the previous_pic_time variable
+previous_pic_time -= time_between_imgs
 
 ## Start the main loop this is the actual experiment
 while True:
     ## Save the current the time
     curr_time = time.perf_counter()
     ## If more than X seconds past - take a picture, adjust lighting and update the last capture time
-    if curr_time - previous_pic_time > 7:
-        capture_imgs()
+    if curr_time - previous_pic_time > time_between_imgs:
+        capture_imgs(my_path)
         print("last img was taken at -", curr_time)
         lrc.loop_through_cams(ROIs_dct, light_dct, my_path)
-        show(ROIs_dct)
+        show(ROIs_dct, my_path)
         previous_pic_time = curr_time

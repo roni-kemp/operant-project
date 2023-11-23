@@ -1,30 +1,19 @@
+"""
+this is meant as a debugging tool
+to see a live view of the camera feed and the different filtered versions
+
+TO DO:
+add ROI marking to the img
+can use - lrc.load_ROI(path)
+"""
+
 import cv2
 import os
 import numpy as np
 
-path = "/home/pi/Desktop/agueda_imgs/__new_imgs__"
-roi_lst = []
-with open(path + "/ROI_log.txt", "r") as roi_file:
-    for line in roi_file:
-        tup = tuple(map(int,line.strip().split(":")[1].strip("(").strip(")").split(', ')))
-        roi_lst.append(tup)
+import live_roi_comp as lrc
 
-print(roi_lst[-2:])
-
-def hsv_plant_filter(img):
-    f_img = img.copy()
-    hsv = cv2.cvtColor(f_img, cv2.COLOR_BGR2HSV) 
-    
-    # Set lower and upper color limits
-    lower_val = np.array([0,0,110])
-    upper_val = np.array([179,200,190])
-    
-    # Threshold the HSV image to get only green colors
-    mask = cv2.inRange(hsv, lower_val, upper_val)
-    
-    # Apply mask to original image - this shows the chosen color with black blackground
-    filtered_hsv = cv2.bitwise_and(f_img, f_img, mask= mask)
-    return filtered_hsv
+path = "/home/pi/Desktop/operant_testing"
 
 # define a video capture object
 vid = cv2.VideoCapture(0)
@@ -33,7 +22,7 @@ first_img_path = path + "/B/"+ os.listdir(path + "/B")[0]
 first_img = cv2.imread(first_img_path)
 
 ## only look at the green color space - should help when turning on/off blue light    
-filtered_bckgound_img = hsv_plant_filter(first_img)
+filtered_bckgound_img = lrc.hsv_plant_filter(first_img)
 
 ## convert both to grayscale
 gray_bkgr = cv2.cvtColor(filtered_bckgound_img, cv2.COLOR_BGR2GRAY)
@@ -49,7 +38,7 @@ while True:
     ret, frame = vid.read()
     
     ## only look at the green color space - should help when turning on/off blue light    
-    filtered_frame = hsv_plant_filter(frame)
+    filtered_frame = lrc.hsv_plant_filter(frame)
 
     ## convert both to grayscale
     gray_frame = cv2.cvtColor(filtered_frame, cv2.COLOR_BGR2GRAY)
