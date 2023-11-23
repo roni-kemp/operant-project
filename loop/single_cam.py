@@ -72,26 +72,48 @@ def save_imgs(parent_path, f_name, width, height):
 def show(ROI_dct, path):
     """ 
     Meant to show a full img of the last capture with the ROIs highlighted
-    """
     
-    cv2.destroyAllWindows()
-
+    
+    """
+    ## clean up old windows, and open new one
+    #cv2.destroyAllWindows()
+    cv2.namedWindow("first and last imgs", cv2.WINDOW_NORMAL)
+    
     ROIs = ROIs_dct["B"]
+    
+    img_lst = []
+    ## Show the first and last img (-1, 0)
     for i in range(-1,1):
-        img_path = os.listdir(path + "/B")[i]
-        
+        img_path = sorted(os.listdir(path + "/B"))[i]
         img = cv2.imread(path + f"/B/{img_path}")
         
         for i in range(2):#ROIs:
             ROI = ROIs[i]
             start_point = np.array((ROI[0]+i*int(img.shape[1]/2),ROI[1])) 
             end_point = start_point + np.array((ROI[2],ROI[3]))
+            
+            rect_color = (212, 220-(100*i), 127+(100*i))
+            
+            cv2.rectangle(img, start_point, end_point, rect_color, 3)
 
-            cv2.rectangle(img, start_point, end_point, (212, 220, 127), 3)
-
+        
         img = cv2.resize(img,(int(img.shape[1]/2), int(img.shape[0]/2)))
-        cv2.imshow(f"{img_path}",img)
-        cv2.waitKey(10)
+        img_lst.append(img)
+    
+    img = cv2.hconcat([img_lst[1], img_lst[0]])
+    dark_blue = (100,0,0)
+    dark_blue1 = (150,0,0)
+    cv2.line(img, (int(img.shape[1]/2), 0), (int(img.shape[1]/2), int(img.shape[1])), dark_blue1, thickness=6)
+    cv2.line(img, (int(img.shape[1]/4), 0), (int(img.shape[1]/4), int(img.shape[1])), dark_blue, thickness=2)
+    cv2.line(img, (int(img.shape[1]*3/4), 0), (int(img.shape[1]*3/4), int(img.shape[1])), dark_blue, thickness=2)
+    
+    color = (0,200,200)
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    cv2.putText(img, 'first', (20, 20), font, 0.5, color, 1, cv2.LINE_AA)
+    cv2.putText(img, 'last', (int(img.shape[1]/2) +20 , 20), font, 0.5, color, 1, cv2.LINE_AA)
+    
+    cv2.imshow("first and last imgs",img)
+    cv2.waitKey(100)
 
 def capture_imgs(path):
     ## get a timestamp for the file name
@@ -125,6 +147,7 @@ capture_imgs(my_path)
 print("finished taking first img...\nwaiting for select ROI(!)")
 ROIs_dct = lrc.get_ROIs_for_all_cams(my_path, ["B"])
 light_dct = {"B_1":L1, "B_2":L2}
+
 ## Allow the user to cancel the ROI selection
 if lrc.manual_stop:
     print("\nyou stopped!")
@@ -137,10 +160,11 @@ previous_pic_time -= time_between_imgs
 while True:
     ## Save the current the time
     curr_time = time.perf_counter()
+#     print(curr_time)
     ## If more than X seconds past - take a picture, adjust lighting and update the last capture time
     if curr_time - previous_pic_time > time_between_imgs:
         capture_imgs(my_path)
         print("last img was taken at -", curr_time)
         lrc.loop_through_cams(ROIs_dct, light_dct, my_path)
-#         show(ROIs_dct, my_path)
+        show(ROIs_dct, my_path)
         previous_pic_time = curr_time

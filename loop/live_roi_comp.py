@@ -82,7 +82,7 @@ def hsv_plant_filter(img):
     filtered_hsv = cv2.bitwise_and(f_img, f_img, mask= mask)
     return filtered_hsv
 
-def compare_2(croped_img, bckgound_img):
+def compare_2(croped_img, bckgound_img, half):
     """compare 2 imgs and return the number of very different pixls"""
     
     ## only look at the green color space - should help when turning on/off blue light    
@@ -101,19 +101,35 @@ def compare_2(croped_img, bckgound_img):
     diff = cv2.absdiff(gray_curr_blur, gray_bkgr_blur)
     
     ret, thresh = cv2.threshold(diff,27,255,cv2.THRESH_BINARY)
-    
-    cv2.namedWindow("first_img", cv2.WINDOW_NORMAL)
-    cv2.imshow("first_img", bckgound_img)
-    
-    cv2.namedWindow("last_img", cv2.WINDOW_NORMAL)
-    cv2.imshow("last_img", croped_img)
-    
-    cv2.namedWindow("thresh", cv2.WINDOW_NORMAL)
-    cv2.imshow("thresh", thresh)
-    
-    cv2.waitKey(1500)
     ## Return the num of diff pixels
     pix_num = len(np.where(thresh>0)[0])
+   
+#     cv2.namedWindow("first_img", cv2.WINDOW_NORMAL)
+#     cv2.imshow("first_img", bckgound_img)
+#     cv2.namedWindow("last_img", cv2.WINDOW_NORMAL)
+#     cv2.imshow("last_img", croped_img)
+#     cv2.namedWindow("thresh", cv2.WINDOW_NORMAL)
+#     cv2.imshow("thresh", thresh)
+    
+    thresh = cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    color = (0,200,200)
+    cv2.putText(bckgound_img, 'first', (5, 15), font, 0.5, color, 1, cv2.LINE_AA)
+    cv2.putText(croped_img, 'last', (5, 15), font, 0.5, color, 1, cv2.LINE_AA)
+    cv2.putText(thresh, 'thresh', (5, 15), font, 0.5, color, 1, cv2.LINE_AA)
+    cv2.putText(thresh, f'{pix_num}', (5, 35), font, 0.5, color, 1, cv2.LINE_AA)
+
+    img = cv2.hconcat([bckgound_img, croped_img, thresh])
+
+    cv2.namedWindow(f"{half=}", cv2.WINDOW_NORMAL)
+    color = (100,0,0)
+    cv2.line(img, (int(croped_img.shape[1]), 0), (int(croped_img.shape[1]), int(img.shape[1])), color, thickness=2)
+    cv2.line(img, (int(croped_img.shape[1]*2), 0), (int(croped_img.shape[1]*2), int(img.shape[1])), color, thickness=2)
+    cv2.line(img, (int(croped_img.shape[1]*3), 0), (int(croped_img.shape[1]*3), int(img.shape[1])), color, thickness=2)
+    
+    cv2.imshow(f"{half=}", img)
+    cv2.waitKey(100)
+    
     return pix_num
 
 
@@ -137,7 +153,7 @@ def compare_to_prev(path, camera_name, ROIs, light_dct):
         bckgrnd_path = path + f"/ROI_{camera_name}_{i+1}.jpg"
         bckgound_img = cv2.imread(bckgrnd_path)
         
-        diff_pix_num = compare_2(croped_img, bckgound_img)
+        diff_pix_num = compare_2(croped_img, bckgound_img, i)
         print("diff= " + str(diff_pix_num))
         if diff_pix_num>100:
             GPIO.output(light_dct[f"{camera_name}_{i+1}"], 0) ## turn off trhe light
@@ -179,7 +195,7 @@ def loop_through_cams(ROI_dct, light_dct, path):
     for camera_name in list(ROI_dct.keys()):
         ROIs = ROI_dct[camera_name]
         compare_to_prev(path, camera_name, ROIs, light_dct)
-    cv2.destroyAllWindows()
+    #cv2.destroyAllWindows()
 
 def log_roi(path, data):
     ## also needs fixing...
