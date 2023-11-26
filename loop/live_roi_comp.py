@@ -20,24 +20,32 @@ def cropping(frame):
     return croped_img, ROI
 
 
+def load_two_halves(img_path):
+    """
+    load an img from img_path
+    return a list with two halves of the img (left and right)
+    """
+    img = cv2.imread(img_path)
+    half_width = int(img.shape[1]/2)
+
+    img_1 = img[:: , :half_width]
+    img_2 = img[:: , half_width:]
+
+    return [img_1, img_2]
+
+
 def save_init_ROIs(path, camera_name, manual_path = None):
     global manual_stop
     
     if manual_path == None:
         curent_path = path + "/" + camera_name
-        img_list = os.listdir(curent_path)
-        img_list.sort()
+        img_list = sorted(os.listdir(curent_path))
         full_path = curent_path + "/" + img_list[-1]
         print(full_path)
     else:
         full_path = manual_path
-    img = cv2.imread(full_path)
-
-    half_width = int(img.shape[1]/2)
-
-    img_1 = img[:: , :half_width]
-    img_2 = img[:: , half_width:]
-    img_halfes = [img_1, img_2]
+    
+    img_halfes = load_two_halves(full_path)
 
     ROIs_lst = []
     for i in range(2):
@@ -45,9 +53,11 @@ def save_init_ROIs(path, camera_name, manual_path = None):
         if ROI == (0, 0, 0, 0):
             manual_stop = True
             break
+        ### not sure we need this: ####
         out_path = path + f"/ROI_{camera_name}_{i+1}.jpg"
         cv2.imwrite(out_path, croped_img)
         cv2.destroyAllWindows()
+        ###############################
         ROIs_lst.append(ROI)
     
     log_roi(path + "/ROI_log.txt", data=ROIs_lst)
@@ -134,26 +144,31 @@ def compare_2(croped_img, bckgound_img, half):
 
 
 def compare_to_prev(path, camera_name, ROIs, light_dct):
+    """should be changed to - comp_to_first"""
     curent_path = path + "/" + camera_name
-    img_list = os.listdir(curent_path)
-    img_list.sort()
-    full_path = curent_path + "/" + img_list[-1]
-    img = cv2.imread(full_path)
-    half_width = int(img.shape[1]/2)
+    img_list = sorted(os.listdir(curent_path))
+    ## replace with os.path.join() ##
+    full_path_fist = curent_path + "/" + img_list[0]
+    full_path_last = curent_path + "/" + img_list[-1]
+    
+    ## load first and last imgs, split into two
+    img_halfes_first = load_two_halves(full_path_fist)
+    img_halfes_last = load_two_halves(full_path_last)
 
-    img_1 = img[:: , :half_width]
-    img_2 = img[:: , half_width:]
-    img_halfes = [img_1, img_2]
-
+    ## loop through halves of the img
     for i in range(2):
-        curr_img = img_halfes[i]
+        ## Load the ROI info to (x, y, w, h) format
         ROI = ROIs[i]
         x, y, w, h = ROI[0], ROI[1], ROI[2], ROI[3]
-        croped_img = curr_img[y:y+h,x:x+w]
-        bckgrnd_path = path + f"/ROI_{camera_name}_{i+1}.jpg"
-        bckgound_img = cv2.imread(bckgrnd_path)
         
-        diff_pix_num = compare_2(croped_img, bckgound_img, i)
+        ## crop the first and last img acording to ROI
+        last_img = img_halfes_last[i]
+        last_img_cropped = last_img[y:y+h,x:x+w]
+        
+        first_img = img_halfes_first[i]
+        first_img_cropped = first_img[y:y+h,x:x+w]
+        
+        diff_pix_num = compare_2(last_img_cropped, first_img_cropped, i)
         print("diff= " + str(diff_pix_num))
         if diff_pix_num>100:
             GPIO.output(light_dct[f"{camera_name}_{i+1}"], 0) ## turn off trhe light

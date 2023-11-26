@@ -72,8 +72,6 @@ def save_imgs(parent_path, f_name, width, height):
 def show(ROI_dct, path):
     """ 
     Meant to show a full img of the last capture with the ROIs highlighted
-    
-    
     """
     ## clean up old windows, and open new one
     #cv2.destroyAllWindows()
@@ -115,6 +113,7 @@ def show(ROI_dct, path):
     cv2.imshow("first and last imgs",img)
     cv2.waitKey(100)
 
+
 def capture_imgs(path):
     ## get a timestamp for the file name
     now = datetime.now()
@@ -133,10 +132,17 @@ def capture_imgs(path):
     print("was ok! NEXT!")
 
 
-## def main():
+###############################################################
+#################### main (kind of) ###########################
+###############################################################
 
-## would like to swap this for a relative path in future
-my_path = "/home/pi/Desktop/operant_testing"
+## this goes to the parent folder of where the code is currently running and save the data there
+## (so in the git repository)
+my_path = "../operant_imgs"
+
+## if we want to specify a path seperatly this would be the way...
+# my_path = "/home/pi/Desktop/operant_testing"
+
 time_between_imgs = 7
 
 previous_pic_time = time.perf_counter()
