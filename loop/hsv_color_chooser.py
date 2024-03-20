@@ -45,7 +45,7 @@ while(1):
         hMax = cv2.getTrackbarPos('HMax', 'Trackbars')
         sMax = cv2.getTrackbarPos('SMax', 'Trackbars')
         vMax = cv2.getTrackbarPos('VMax', 'Trackbars')
-    except cv.error as e:
+    except cv2.error as e:
         print(f"cv2 error: '''\n{e}'''\nprobably closed window...")
         break
     # Set minimum and maximum HSV values to display
@@ -75,3 +75,4 @@ while(1):
 print(f"{lower=}")
 print(f"{upper=}")
 cv2.destroyAllWindows()
+vid.release()
