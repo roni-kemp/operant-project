@@ -1,6 +1,9 @@
 ## single cam
 import RPi.GPIO as GPIO
 import cv2
+from picamera2 import Picamera2
+from libcamera import controls
+
 import re
 
 import time
@@ -41,20 +44,27 @@ def save_imgs(parent_path, f_name, width, height):
     
     create_folder(path)
     
-    camera = cv2.VideoCapture(0)
+    #camera = cv2.VideoCapture(0)
     
     try:
-        assert camera.isOpened()
-        ret, frame = camera.read()
-        
-        if ret == True:
-            file_path = path + "//" + f_name +".jpg"
-            cv2.imwrite(file_path, frame)
+        #assert camera.isOpened()
+        #ret, frame = camera.read()
+        frame = picam2.capture_array("main")
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-        else:
-            print(f"failed,{f_name} try again...")                    
+        scale_percent = 30 # [%]
+        width = int(frame.shape[1] * scale_percent / 100)
+        height = int(frame.shape[0] * scale_percent / 100)
+        dim = (width, height)
+        frame = cv2.resize(frame, dim, interpolation = cv2.INTER_AREA)
+#         if ret == True:
+        file_path = path + "//" + f_name +".jpg"
+        cv2.imwrite(file_path, frame)
+
+#         else:
+#             print(f"failed,{f_name} try again...")                    
 #             my_logging((f_name, directory_name, "failed"))
-            was_ok = False
+#             was_ok = False
                 
     except AssertionError:
         print(f"{30*'#'}\n assertion error with video capture\n{30*'#'}")
@@ -66,7 +76,8 @@ def save_imgs(parent_path, f_name, width, height):
         was_ok = False
         ## We should log this
     # ADD finnaly?
-    camera.release()
+    #camera.release()
+    print("asdasdasdasdasdasd")
     return was_ok
     
 def show(ROI_dct, path):
@@ -97,6 +108,9 @@ def show(ROI_dct, path):
         
         img = cv2.resize(img,(int(img.shape[1]/2), int(img.shape[0]/2)))
         img_lst.append(img)
+    
+    print(img_lst[1].shape)
+    print(img_lst[0].shape)
     
     img = cv2.hconcat([img_lst[1], img_lst[0]])
     dark_blue = (100,0,0)
@@ -136,6 +150,16 @@ def capture_imgs(path):
 #################### main (kind of) ###########################
 ###############################################################
 
+## init camera
+
+picam2 = Picamera2()
+
+picam2.configure(camera_config="still")
+picam2.set_controls({"AfMode": controls.AfModeEnum.Manual, "LensPosition":2})
+picam2.start()
+
+
+
 ## this goes to the parent folder of where the code is currently running and save the data there
 ## (so in the git repository)
 my_path = "../operant_imgs"
@@ -143,7 +167,7 @@ my_path = "../operant_imgs"
 ## if we want to specify a path seperatly this would be the way...
 # my_path = "/home/pi/Desktop/operant_testing"
 
-time_between_imgs = 7
+time_between_imgs = 240
 
 previous_pic_time = time.perf_counter()
 print("starting run", time.ctime())

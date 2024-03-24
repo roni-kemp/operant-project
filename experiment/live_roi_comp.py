@@ -170,7 +170,7 @@ def compare_to_prev(path, camera_name, ROIs, light_dct):
         
         diff_pix_num = compare_2(last_img_cropped, first_img_cropped, i)
         print("diff= " + str(diff_pix_num))
-        if diff_pix_num>100:
+        if diff_pix_num>20:#100:
             GPIO.output(light_dct[f"{camera_name}_{i+1}"], 0) ## turn off trhe light
             print(f"light off{camera_name}_{i+1}")
 
