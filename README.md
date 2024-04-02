@@ -17,6 +17,7 @@
 
 
 ##### TODO:
+- [ ] threshold, and any other changeing values should be saved to the log file as well.
 - [ ] add if statment to the threshold so that we change it depending on the lights on or off
 - [ ] resize for choosing ROI and showing, but not for threshold and saveing the image
 - [ ] fix bug where creating a new roi doesn't update the first imagen so we don't need to delete every time.
