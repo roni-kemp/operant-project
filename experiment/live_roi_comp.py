@@ -113,14 +113,8 @@ def compare_2(croped_img, bckgound_img, half):
     ret, thresh = cv2.threshold(diff,27,255,cv2.THRESH_BINARY)
     ## Return the num of diff pixels
     pix_num = len(np.where(thresh>0)[0])
-   
-#     cv2.namedWindow("first_img", cv2.WINDOW_NORMAL)
-#     cv2.imshow("first_img", bckgound_img)
-#     cv2.namedWindow("last_img", cv2.WINDOW_NORMAL)
-#     cv2.imshow("last_img", croped_img)
-#     cv2.namedWindow("thresh", cv2.WINDOW_NORMAL)
-#     cv2.imshow("thresh", thresh)
-    
+
+    ## Add text to the imgs
     thresh = cv2.cvtColor(thresh, cv2.COLOR_GRAY2BGR)
     font = cv2.FONT_HERSHEY_SIMPLEX
     color = (0,200,200)
@@ -128,15 +122,18 @@ def compare_2(croped_img, bckgound_img, half):
     cv2.putText(croped_img, 'last', (5, 15), font, 0.5, color, 1, cv2.LINE_AA)
     cv2.putText(thresh, 'thresh', (5, 15), font, 0.5, color, 1, cv2.LINE_AA)
     cv2.putText(thresh, f'{pix_num}', (5, 35), font, 0.5, color, 1, cv2.LINE_AA)
-
+    
+    # Combine the imgs
     img = cv2.hconcat([bckgound_img, croped_img, thresh])
 
-    cv2.namedWindow(f"{half=}", cv2.WINDOW_NORMAL)
+    # Draw lines to separate the different imgs    
     color = (100,0,0)
     cv2.line(img, (int(croped_img.shape[1]), 0), (int(croped_img.shape[1]), int(img.shape[1])), color, thickness=2)
     cv2.line(img, (int(croped_img.shape[1]*2), 0), (int(croped_img.shape[1]*2), int(img.shape[1])), color, thickness=2)
     cv2.line(img, (int(croped_img.shape[1]*3), 0), (int(croped_img.shape[1]*3), int(img.shape[1])), color, thickness=2)
-    
+
+    # Show the img
+    cv2.namedWindow(f"{half=}", cv2.WINDOW_NORMAL)
     cv2.imshow(f"{half=}", img)
     cv2.waitKey(100)
     
@@ -171,7 +168,7 @@ def compare_to_prev(path, camera_name, ROIs, light_dct):
         diff_pix_num = compare_2(last_img_cropped, first_img_cropped, i)
         print("diff= " + str(diff_pix_num))
         if diff_pix_num>20:#100:
-            GPIO.output(light_dct[f"{camera_name}_{i+1}"], 0) ## turn off trhe light
+            GPIO.output(light_dct[f"{camera_name}_{i+1}"], 0) ## turn off the light
             print(f"light off{camera_name}_{i+1}")
 
         else:

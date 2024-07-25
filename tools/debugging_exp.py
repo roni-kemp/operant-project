@@ -94,6 +94,10 @@ def loop_over_exp_folder(ROIs_dct, path, show = False, save = True):
         out.release()
 
 
+## TODO:
+    # add the comparison to the first frame
+
+
 path = r"C:\Users\Roni\Desktop\Roni_new\python scripts\pavlovian sunflowers\operant-project\operant_imgs\New"
  
 ROIs_dct = load_ROI_dct(path)

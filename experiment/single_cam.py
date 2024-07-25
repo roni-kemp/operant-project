@@ -44,11 +44,8 @@ def save_imgs(parent_path, f_name, width, height):
     
     create_folder(path)
     
-    #camera = cv2.VideoCapture(0)
-    
     try:
-        #assert camera.isOpened()
-        #ret, frame = camera.read()
+
         frame = picam2.capture_array("main")
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
@@ -57,14 +54,9 @@ def save_imgs(parent_path, f_name, width, height):
         height = int(frame.shape[0] * scale_percent / 100)
         dim = (width, height)
         frame = cv2.resize(frame, dim, interpolation = cv2.INTER_AREA)
-#         if ret == True:
+        
         file_path = path + "//" + f_name +".jpg"
         cv2.imwrite(file_path, frame)
-
-#         else:
-#             print(f"failed,{f_name} try again...")                    
-#             my_logging((f_name, directory_name, "failed"))
-#             was_ok = False
                 
     except AssertionError:
         print(f"{30*'#'}\n assertion error with video capture\n{30*'#'}")
@@ -77,10 +69,9 @@ def save_imgs(parent_path, f_name, width, height):
         ## We should log this
     # ADD finnaly?
     #camera.release()
-    print("asdasdasdasdasdasd")
     return was_ok
     
-def show(ROI_dct, path):
+def show(ROIs_dct, path):
     """ 
     Meant to show a full img of the last capture with the ROIs highlighted
     """
