@@ -26,6 +26,14 @@ def select_roi(img_path):
     cv2.destroyWindow("SELECT ROI")
     return roi
 
+def get_last_img_from_folder(base_path):
+    img_dir = os.path.join(base_path, "imgs")
+    image_files = sorted(os.listdir(img_dir))
+    if not image_files:
+        raise FileNotFoundError("No images found in the imgs directory.")
+    image_path = os.path.join(img_dir, image_files[-1])
+    return image_path
+
 def save_init_roi(base_path, manual_image_path = None):
     """
     Let the user select a ROI and save it to roi.txt in base_path.
@@ -34,11 +42,7 @@ def save_init_roi(base_path, manual_image_path = None):
     global manual_stop
     
     if manual_image_path is None:
-        img_dir = os.path.join(base_path, "imgs")
-        image_files = sorted(os.listdir(img_dir))
-        if not image_files:
-            raise FileNotFoundError("No images found in the imgs directory.")
-        image_path = os.path.join(img_dir, image_files[-1])
+        image_path = get_last_img_from_folder(base_path)
     else:
         image_path = manual_image_path
     
@@ -104,11 +108,14 @@ def thresholding_grey_img(img, min_threshold, show = False):
     return mask
 
 
-def analyze_roi(roi, img, min_color_threshold = 130):
+def analyze_roi(roi, base_path, min_color_threshold = 130):
     """
     Analyzes the number of non-black pixels in the specified ROI of the image.
     Applies morphological opening to clean noise.
     """
+    img_path = get_last_img_from_folder(base_path)
+    img = cv2.imread(img_path)
+
     thresh_mask = thresholding_grey_img(img, min_color_threshold)
     
     ## Clean up noise
@@ -130,6 +137,7 @@ if __name__ == "__main__":
     # Example usage
     from matplotlib import pyplot as plt    
 
+    base_path = r"C:\Users\Roni\Desktop\Roni_new\python scripts\pavlovian sunflowers\operant-project\mock_exp"
     roi = get_roi(r"C:\Users\Roni\Desktop\Roni_new\python scripts\pavlovian sunflowers\operant-project\mock_exp\250513")
     img = cv2.imread(r"C:\Users\Roni\Desktop\Roni_new\python scripts\pavlovian sunflowers\operant-project\mock_exp\250513\imgs\03_02__17_09_52.jpg")
 

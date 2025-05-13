@@ -35,13 +35,15 @@ def save_imgs(parent_path, f_name, width, height):
         frame = picam2.capture_array("main")
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
+        ###### resize the image - why though? ######
         scale_percent = 30 # [%]
         width = int(frame.shape[1] * scale_percent / 100)
         height = int(frame.shape[0] * scale_percent / 100)
         dim = (width, height)
         frame = cv2.resize(frame, dim, interpolation = cv2.INTER_AREA)
-        
-        file_path = path + "//" + f_name +".jpg"
+        ############################################
+
+        file_path = os.path.join(path, f_name)
         cv2.imwrite(file_path, frame)
                 
     except AssertionError:
@@ -111,10 +113,11 @@ def capture_imgs(path):
     curr_time = datetime.now().strftime("%m_%d__%H_%M_%S")
     print("Current Time =", curr_time)
     
+    img_file_name = f"{curr_time}.jpg"
     ## loop and check if there was an error in capturing and saving the img
     ## if there was an error retry
     while True:
-        was_ok = save_imgs(path ,curr_time, 1280, 720)
+        was_ok = save_imgs(path, img_file_name, 1280, 720)
         if was_ok:
             break
         else:
@@ -178,7 +181,18 @@ while True:
     ## If more than X seconds past - take a picture, adjust lighting and update the last capture time
     if curr_time - previous_pic_time > time_between_imgs:
         capture_imgs(base_path)
-        print("last img was taken at -", curr_time)
-        lrc.loop_through_cams(roi, base_path)
+        img_time = datetime.now().strftime("%m/%d - %H_%M_%S")
+        print(f"last img was taken at:\n{img_time}")
+        
+        non_black_pix = lrc.analyze_roi(roi, base_path)
         show(roi, base_path)
+
+        ## change the light ?
+        pxl_cnt_thresh = 20
+        if non_black_pix > pxl_cnt_thresh:
+            GPIO.output(L1, 0)
+        else:
+            GPIO.output(L1, 1)
+
         previous_pic_time = curr_time
+        ## logging(img_time, non_black_pix, )
