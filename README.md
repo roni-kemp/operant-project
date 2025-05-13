@@ -16,6 +16,22 @@
 -- live_roi_comp_old
 
 
+
+----------------
+A new experiment should **create** the following folder structure:
+
+```
+exp_folder/
+├── 250513/
+│   ├── roi.txt
+│   ├── log.txt
+│   ├── imgs/
+│   │   ├── 03_02__17_09_52.jpg
+│   │   ├── 03_02__17_13_52.jpg
+│   │   └── ...
+```
+----------------
+
 ##### TODO:
 
 - [ ] add if statment to the threshold so that we change it depending on the lights on or off

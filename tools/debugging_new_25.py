@@ -86,9 +86,6 @@ def thresholding_grey_img(img, min_threshold, show = False):
     Min = min_threshold
     Max = 255
 
-    lower = np.array(Min)
-    upper = np.array(Max)
-
     # Convert to grey format and threshold
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     mask = cv2.inRange(gray, Min, Max)

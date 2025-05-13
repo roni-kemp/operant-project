@@ -4,25 +4,12 @@ import cv2
 from picamera2 import Picamera2
 from libcamera import controls
 
-import re
-
 import time
 from datetime import datetime
 import os
 import numpy as np
 
 import live_roi_comp as lrc
-
-## set up pins to controll blue light
-GPIO.setmode(GPIO.BOARD)
-GPIO.setwarnings(False)
-
-L1 = 12#33
-L2 = 11#40
-
-GPIO.setup(L1, GPIO.OUT)
-GPIO.setup(L2, GPIO.OUT)
-
 
 def create_folder(path):
     ## Check if the folder exists
@@ -70,7 +57,8 @@ def save_imgs(parent_path, f_name, width, height):
     # ADD finnaly?
     #camera.release()
     return was_ok
-    
+
+
 def show(ROIs_dct, path):
     """ 
     Meant to show a full img of the last capture with the ROIs highlighted
@@ -137,31 +125,38 @@ def capture_imgs(path):
     print("was ok! NEXT!")
 
 
+## set up pins to controll blue light
+GPIO.setmode(GPIO.BOARD)
+GPIO.setwarnings(False)
+
+L1 = 12#33
+L2 = 11#40
+
+GPIO.setup(L1, GPIO.OUT)
+GPIO.setup(L2, GPIO.OUT)
+
+
 ###############################################################
 #################### main (kind of) ###########################
 ###############################################################
 
 ## init camera
-
 picam2 = Picamera2()
 
 picam2.configure(camera_config="still")
 picam2.set_controls({"AfMode": controls.AfModeEnum.Manual, "LensPosition":2})
 picam2.start()
 
-
-
 ## this goes to the parent folder of where the code is currently running and save the data there
 ## (so in the git repository)
 my_path = "../operant_imgs"
-
 ## if we want to specify a path seperatly this would be the way...
 # my_path = "/home/pi/Desktop/operant_testing"
 
 time_between_imgs = 240
 
 previous_pic_time = time.perf_counter()
-print("starting run", time.ctime())
+print("starting experiment", time.ctime())
 
 ## Get the first img - used to choose the ROI
 capture_imgs(my_path)
