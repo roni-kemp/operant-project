@@ -12,7 +12,7 @@ def nothing(x):
     pass
 
 # Load image
-image =  cv2.imread(r"C:\Users\Roni\Desktop\Roni_new\python scripts\pavlovian sunflowers\operant-project\operant_imgs\A\07_17__18_07_57.jpg")
+image =  cv2.imread(r"C:\Users\Roni\Desktop\Roni_new\python scripts\pavlovian sunflowers\operant-project\mock_exp\250513\imgs\03_02__17_09_52.jpg")
 # Create a window
 cv2.namedWindow("image", cv2.WINDOW_NORMAL)
 
@@ -64,6 +64,11 @@ while(1):
     # Convert to grey format and threshold
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     mask = cv2.inRange(gray, Min, Max)
+    
+    ## morphological operation to remove small object noise 
+    kernel = np.ones((10,10),np.uint8)
+    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+    
     # result_grey = cv2.bitwise_and(gray, gray, mask=mask)
     result = cv2.bitwise_and(image, image, mask=mask)
     
