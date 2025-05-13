@@ -31,6 +31,14 @@ exp_folder/
 │   │   └── ...
 ```
 ----------------
+##### TODO 13/05/25:
+* log file
+* settings file - should contain roi and threshold 
+* thesholding file should save the info to the settings file. 
+* save the roi and thresholded roi as an image 
+* show the last roi image
+
+
 
 ##### TODO:
 
