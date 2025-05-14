@@ -1,36 +1,46 @@
 # operant-project
- 
-## ----- experiment: ------
--- live_roi_comparison
--- log_info
--- single_cam
-
-## ----- tools: -----------
--- live_view
--- hsv_color_chooser
--- grey_thres_chooser
-
-## ----- remove? ----------
--- capture_cam_loop
--- adapter board
--- live_roi_comp_old
-
-
-
 ----------------
 A new experiment should **create** the following folder structure:
 
 ```
 exp_folder/
 ├── 250513/
-│   ├── roi.txt
+│   ├── settings.pkl
 │   ├── log.txt
 │   ├── imgs/
 │   │   ├── 03_02__17_09_52.jpg
 │   │   ├── 03_02__17_13_52.jpg
 │   │   └── ...
 ```
+
 ----------------
+##### TODO 13/05/25:
+- [x] ~~log file~~
+- [x] ~~settings file - should contain roi and threshold~~
+- [x] ~~thesholding file should save the info to the settings file.~~
+- [ ] save the roi and thresholded roi as an image 
+- [ ] show the last roi image
+
+ ----------------
+ 
+# Old layour and to do:
+##  experiment:
+-- live_roi_comparison
+-- log_info
+-- single_cam
+
+##  tools:
+-- live_view
+-- hsv_color_chooser
+-- grey_thres_chooser
+
+## remove? 
+-- capture_cam_loop
+-- adapter board
+-- live_roi_comp_old
+
+
+
 
 ##### TODO:
 
