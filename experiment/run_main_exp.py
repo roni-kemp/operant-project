@@ -60,52 +60,74 @@ def save_imgs(parent_path, f_name, width, height):
     return was_ok
 
 
-def show(ROIs_dct, path):
+def show(roi, base_path):
     """ 
-    Meant to show a full img of the last capture with the ROIs highlighted
+    Meant to show a full img of the last capture with the ROI highlighted
     """
-    ## clean up old windows, and open new one
-    #cv2.destroyAllWindows()
-    cv2.namedWindow("first and last imgs", cv2.WINDOW_NORMAL)
     
-    ROIs = ROIs_dct["B"]
-    
-    img_lst = []
-    ## Show the first and last img (-1, 0)
-    for i in range(-1,1):
-        img_path = sorted(os.listdir(path + "/B"))[i]
-        img = cv2.imread(path + f"/B/{img_path}")
-        
-        for i in range(2):#ROIs:
-            ROI = ROIs[i]
-            start_point = np.array((ROI[0]+i*int(img.shape[1]/2),ROI[1])) 
-            end_point = start_point + np.array((ROI[2],ROI[3]))
-            
-            rect_color = (212, 220-(100*i), 127+(100*i))
-            
-            cv2.rectangle(img, start_point, end_point, rect_color, 3)
+    ## get last img from the folder
+    path = os.path.join(base_path, "imgs")
+    img_path = sorted(os.listdir(path))[-1]
+    img = cv2.imread(os.path.join(path, img_path))
 
-        
-        img = cv2.resize(img,(int(img.shape[1]/2), int(img.shape[0]/2)))
-        img_lst.append(img)
+    x, y, w, h = roi
+    roi_start_point = (x, y)
+    roi_end_point = (x + w, y + h)
+
+    rect_color = (212, 220, 127)
     
-    print(img_lst[1].shape)
-    print(img_lst[0].shape)
+    # grey_thesh = lrc.get_grey_threshold(base_path)
+    # thresholded = lrc.thresholding_grey_img(img, grey_thesh)
+
+    grey_thesh = get_grey_threshold(base_path)
+    thresholded = thresholding_grey_img(img, grey_thesh)
+
+    cv2.rectangle(img, roi_start_point, roi_end_point, rect_color, 3)
+    cv2.rectangle(thresholded, roi_start_point, roi_end_point, 255, 3)
     
-    img = cv2.hconcat([img_lst[1], img_lst[0]])
-    dark_blue = (100,0,0)
-    dark_blue1 = (150,0,0)
-    cv2.line(img, (int(img.shape[1]/2), 0), (int(img.shape[1]/2), int(img.shape[1])), dark_blue1, thickness=6)
-    cv2.line(img, (int(img.shape[1]/4), 0), (int(img.shape[1]/4), int(img.shape[1])), dark_blue, thickness=2)
-    cv2.line(img, (int(img.shape[1]*3/4), 0), (int(img.shape[1]*3/4), int(img.shape[1])), dark_blue, thickness=2)
+
+    ## for showing we resize the image    
+    img = cv2.resize(img,(int(img.shape[1]/4), int(img.shape[0]/4)))
+    thresholded = cv2.resize(thresholded,(int(thresholded.shape[1]/4), int(thresholded.shape[0]/4)))
+    thresholded = cv2.cvtColor(thresholded, cv2.COLOR_GRAY2BGR)
+    img = cv2.hconcat([img, thresholded])
     
-    color = (0,200,200)
-    font = cv2.FONT_HERSHEY_SIMPLEX
-    cv2.putText(img, 'first', (20, 20), font, 0.5, color, 1, cv2.LINE_AA)
-    cv2.putText(img, 'last', (int(img.shape[1]/2) +20 , 20), font, 0.5, color, 1, cv2.LINE_AA)
+    dark_blue = (150,0,0)
+    cv2.line(img, (int(img.shape[1]/2), 0), (int(img.shape[1]/2), int(img.shape[1])), dark_blue, thickness=6)
     
-    cv2.imshow("first and last imgs",img)
-    cv2.waitKey(100)
+    ## show the image
+    cv2.namedWindow("last img", cv2.WINDOW_NORMAL)
+    cv2.imshow("last img", img)
+    cv2.waitKey(0)
+
+def show_roi(roi, base_path):
+    ## get last img from the folder
+    path = os.path.join(base_path, "imgs")
+    img_path = sorted(os.listdir(path))[-1]
+    img = cv2.imread(os.path.join(path, img_path))
+
+    x, y, w, h = roi
+    croped_img = img[y:y+h, x:x+w]
+
+    grey_thesh = get_grey_threshold(base_path)
+    croped_thresholded = thresholding_grey_img(croped_img, grey_thesh)
+    croped_thresholded = cv2.cvtColor(croped_thresholded, cv2.COLOR_GRAY2BGR)
+
+    img = cv2.hconcat([croped_img, croped_thresholded])
+    
+    dark_blue = (150,0,0)
+    cv2.line(img, (int(img.shape[1]/2), 0), (int(img.shape[1]/2), int(img.shape[1])), dark_blue, thickness=6)
+
+    _, relative_white = analyze_roi(roi, base_path, grey_thesh)
+    cv2.putText(img, f"relative white: {relative_white}%", (20, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,200,200), 1, cv2.LINE_AA)
+
+    ## show the image
+    cv2.namedWindow("last img", cv2.WINDOW_NORMAL)
+    cv2.imshow("last img", img)
+    cv2.waitKey(0)
+
+    return img
+
 
 
 def capture_imgs(path):
@@ -128,12 +150,12 @@ def capture_imgs(path):
        
 def init_log(log_path):
     with open(log_path, 'w') as f:
-        f.write("time, pixel_value, light_status\n")
+        f.write("time, pixel_cnt, pixel_value, light_status\n")
 
 def log_data(log_path, values):
     with open(log_path, 'a') as f:
-                ## time, pixel_value, light_status
-        f.write(f"{values[0]}, {values[1]}, {values[2]}\n")
+                ## time, pixel_cnt, pixel_value, light_status
+        f.write(f"{values[0]}, {values[1]}, {values[2]}, {values[3]}\n")
 
 
 ## set up pins to controll blue light
@@ -204,7 +226,7 @@ while True:
         grey_thesh = lrc.get_grey_threshold(base_path)
         non_black_pix, relative_white = lrc.analyze_roi(roi, base_path, grey_thesh)
         
-        #show(roi, base_path)
+        show_roi(roi, base_path)
                 
         ## change the light ?
         pxl_cnt_thresh = 1000
@@ -215,7 +237,7 @@ while True:
             GPIO.output(L1, GPIO.HIGH)
             Light_status = "on"
 
-        values = (img_time, relative_white, Light_status)
+        values = (img_time, non_black_pix, relative_white, Light_status)
         log_data(log_path, values)
 
         previous_pic_time = curr_time
