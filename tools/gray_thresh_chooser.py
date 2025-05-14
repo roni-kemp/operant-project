@@ -63,6 +63,9 @@ while True:
 
 cv2.destroyAllWindows()
 
+#%% TODO: add function to do the same with live view of the camera
+
+
 #%% MARK: UI
 
 # Create and hide the root window
@@ -105,3 +108,10 @@ else:
 
 top.destroy()  # Clean up
 
+# #%% MARK:
+# path = r"C:\Users\Roni\Desktop\Roni_new\python scripts\pavlovian sunflowers\operant-project\mock_exp\250513\settings.pkl"
+# with open(path, 'rb') as f:
+#     dct = pickle.load(f)
+#     print(dct)
+
+# %%
