@@ -125,19 +125,33 @@ def capture_imgs(path):
             time.sleep(2)
     print("was ok! NEXT!")
 
+       
+def init_log(log_path):
+    with open(log_path, 'w') as f:
+        f.write("time, pixel_value, light_status\n")
+
+def log_data(log_path, values):
+    with open(log_path, 'a') as f:
+                ## time, pixel_value, light_status
+        f.write(f"{values[0]}, {values[1]}, {values[2]}\n")
+
+
 ## set up pins to controll blue light
-GPIO.setmode(GPIO.BOARD)
+GPIO.setmode(GPIO.BCM)
 GPIO.setwarnings(False)
 
-L1 = 12#33
-L2 = 11#40
+L1 = 4
 
 GPIO.setup(L1, GPIO.OUT)
-GPIO.setup(L2, GPIO.OUT)
 
 ###############################################################
 #################### main (kind of) ###########################
 ###############################################################
+
+## Init light
+GPIO.output(L1, GPIO.LOW)
+Light_status = "off"
+
 
 ## init camera
 picam2 = Picamera2()
@@ -146,7 +160,6 @@ picam2.configure(camera_config="still")
 picam2.set_controls({"AfMode": controls.AfModeEnum.Manual, "LensPosition":2})
 picam2.start()
 
-previous_pic_time = time.perf_counter()
 # Start time in YYYY-MM-DD HH:MM:SS
 start_date = datetime.now().strftime("%Y-%m-%d")
 start_time = datetime.now().strftime("%H:%M")
@@ -163,13 +176,18 @@ capture_imgs(base_path)
 print("finished taking first img...\nwaiting for select ROI(!)")
 roi = lrc.get_roi(base_path)
 
+## Initialize the log file
+log_path = os.path.join(base_path, "log.txt")
+init_log(log_path)
+
 ## Allow the user to cancel the ROI selection
 if lrc.manual_stop:
     print("\nyou stopped!")
     exit()
 
-## set a time interval for the experiment
+## set a time interval for the experiment and init timer
 time_between_imgs = 240
+previous_pic_time = time.perf_counter()
 ## To start the loop imidiatly we tweak the previous_pic_time variable
 previous_pic_time -= time_between_imgs
 
@@ -184,15 +202,20 @@ while True:
         img_time = datetime.now().strftime("%m/%d - %H_%M_%S")
         print(f"last img was taken at:\n{img_time}")
         grey_thesh = lrc.get_grey_threshold(base_path)
-        non_black_pix = lrc.analyze_roi(roi, base_path, grey_thesh)
-        show(roi, base_path)
-
+        non_black_pix, relative_white = lrc.analyze_roi(roi, base_path, grey_thesh)
+        
+        #show(roi, base_path)
+                
         ## change the light ?
-        pxl_cnt_thresh = 20
+        pxl_cnt_thresh = 1000
         if non_black_pix > pxl_cnt_thresh:
-            GPIO.output(L1, 0)
+            GPIO.output(L1, GPIO.LOW)
+            Light_status = "off"
         else:
-            GPIO.output(L1, 1)
+            GPIO.output(L1, GPIO.HIGH)
+            Light_status = "on"
+
+        values = (img_time, relative_white, Light_status)
+        log_data(log_path, values)
 
         previous_pic_time = curr_time
-        ## logging(img_time, non_black_pix, )
