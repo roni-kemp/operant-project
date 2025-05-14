@@ -2,18 +2,26 @@
 import cv2
 import os
 import numpy as np
+import pickle
 
 #%% MARK: ROI functions
 
-def read_roi_from_file(path):
+def read_roi_from_file(settings_path):
     """
     Read the ROI from a file.
     Expected format: (x, y, width, height) on the first line.
     """
-    with open(path, 'r') as f:
-        line = f.read()
-        roi_data = line.strip("()[]").split(",")
-    return [int(x) for x in roi_data]
+    ## load the settings
+    with open(settings_path, 'rb') as f:
+        data_dct = pickle.load(f)
+    
+    roi_data = data_dct.get("roi", None)
+    return roi_data
+
+    # with open(settings_path, 'r') as f:
+    #     line = f.read()
+    #     roi_data = line.strip("()[]").split(",")
+    # return [int(x) for x in roi_data]
     
 def select_roi(img_path):
     """
@@ -51,12 +59,17 @@ def save_init_roi(base_path, manual_image_path = None):
 
     if roi == (0, 0, 0, 0):
         manual_stop = True
-    
-    ## Save the ROI to a file
-    roi_path = os.path.join(base_path, "roi.txt")
-    with open(roi_path, 'w') as f:
-        f.write(str(roi))
-    print(f"ROI saved to {roi_path}")
+
+    settings_path = os.path.join(base_path, "settings.pkl")
+    if os.path.isfile(settings_path):
+        with open(settings_path, 'rb') as f:
+            data_dct = pickle.load(f)
+        data_dct["roi"] = roi
+    else:
+        data_dct = {"roi": roi, "grey_threshold": 130}
+    with open(settings_path, 'wb') as f:
+        pickle.dump(data_dct, f)
+    print(f"ROI saved to {settings_path}")
     
     return roi
 
@@ -65,26 +78,27 @@ def get_roi(base_path):
     Get the ROI from file or ask the user to select one.
     """
     ## if there already is a ROI file - we can use that!
-    roi_path = os.path.join(base_path, "roi.txt")
+    settings_path = os.path.join(base_path, "settings.pkl")
 
-    if os.path.isfile(roi_path):
-        user_input = input("\n The file 'roi.txt' already exists...\nDo you want to load that ROI? (Y/n)").strip().lower()
-        if user_input in ("", "y"):
-            print("using existing file")
-            ## continue to load ROI from file
-            roi = read_roi_from_file(roi_path)
-        else:
-            print("Choose new ROI!")
-            roi = save_init_roi(base_path)
+    if os.path.isfile(settings_path):
+        roi = read_roi_from_file(settings_path)
+        if roi is not None:
+            user_input = input("\n there is a ROI in the settings file...\nDo you want to load that ROI? (Y/n)").strip().lower()
+            if user_input in ("", "y"):
+                print("using existing ROI")
+                return roi            
+        
+        print("No ROI in the seetings file. Choose new ROI!")
+        roi = save_init_roi(base_path)
     else:
-        print("No ROI file found. Please select a new ROI.")
+        print("didn't find the settings file, the default grey_threshold is 130 \nChoose new ROI!")
         roi = save_init_roi(base_path)
     
     return roi
+    
 
 ## global variable to stop the program
 manual_stop = False
-
 #%% MARK: other functions
 
 ## show the numer of non black pixels in the roi
@@ -139,8 +153,9 @@ if __name__ == "__main__":
 
     base_path = r"C:\Users\Roni\Desktop\Roni_new\python scripts\pavlovian sunflowers\operant-project\mock_exp"
     roi = get_roi(r"C:\Users\Roni\Desktop\Roni_new\python scripts\pavlovian sunflowers\operant-project\mock_exp\250513")
+    print(roi)
     img = cv2.imread(r"C:\Users\Roni\Desktop\Roni_new\python scripts\pavlovian sunflowers\operant-project\mock_exp\250513\imgs\03_02__17_09_52.jpg")
 
-    analyze_roi(roi, img)
+    # analyze_roi(roi, img)
 
 # %%
