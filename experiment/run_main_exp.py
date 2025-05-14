@@ -183,8 +183,8 @@ while True:
         capture_imgs(base_path)
         img_time = datetime.now().strftime("%m/%d - %H_%M_%S")
         print(f"last img was taken at:\n{img_time}")
-        
-        non_black_pix = lrc.analyze_roi(roi, base_path)
+        grey_thesh = lrc.get_grey_threshold(base_path)
+        non_black_pix = lrc.analyze_roi(roi, base_path, grey_thesh)
         show(roi, base_path)
 
         ## change the light ?

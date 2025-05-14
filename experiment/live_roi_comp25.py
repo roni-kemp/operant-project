@@ -17,11 +17,6 @@ def read_roi_from_file(settings_path):
     
     roi_data = data_dct.get("roi", None)
     return roi_data
-
-    # with open(settings_path, 'r') as f:
-    #     line = f.read()
-    #     roi_data = line.strip("()[]").split(",")
-    # return [int(x) for x in roi_data]
     
 def select_roi(img_path):
     """
@@ -85,7 +80,7 @@ def get_roi(base_path):
         if roi is not None:
             user_input = input("\n there is a ROI in the settings file...\nDo you want to load that ROI? (Y/n)").strip().lower()
             if user_input in ("", "y"):
-                print("using existing ROI")
+                print(f"using existing ROI from settings file:\n{settings_path}")
                 return roi            
         
         print("No ROI in the seetings file. Choose new ROI!")
@@ -117,12 +112,12 @@ def thresholding_grey_img(img, min_threshold, show = False):
         cv2.namedWindow("img", cv2.WINDOW_NORMAL)
         cv2.imshow('img', result)
         cv2.waitKey(0)
-        cv2.destroyAllWilndows()
+        cv2.destroyAllWindows()
     
     return mask
 
 
-def analyze_roi(roi, base_path, min_color_threshold = 130):
+def analyze_roi(roi, base_path, grey_threshold, show = False):
     """
     Analyzes the number of non-black pixels in the specified ROI of the image.
     Applies morphological opening to clean noise.
@@ -130,7 +125,7 @@ def analyze_roi(roi, base_path, min_color_threshold = 130):
     img_path = get_last_img_from_folder(base_path)
     img = cv2.imread(img_path)
 
-    thresh_mask = thresholding_grey_img(img, min_color_threshold)
+    thresh_mask = thresholding_grey_img(img, grey_threshold, show)
     
     ## Clean up noise
     kernel = np.ones((10,10),np.uint8)
@@ -138,24 +133,41 @@ def analyze_roi(roi, base_path, min_color_threshold = 130):
 
     x, y, w, h = roi
     roi_mask = thresh_mask[y:y+h, x:x+w]
-
-    non_black_pix = len(np.where(roi_mask>0)[0])
-    print(f"non black pixels in roi: {non_black_pix}")
     
-    return non_black_pix
+    non_black_pix = len(np.where(roi_mask>0)[0])
+    
+    relative_area = non_black_pix / (w * h)
+    print(f"relative area of non black pixels in roi: {relative_area:.2%}")
+    
+    if show:
+        cv2.imshow("ROI", roi_mask)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+    return non_black_pix, round(relative_area*100,2)
 
-
+def get_grey_threshold(base_path):
+    """
+    Get the grey threshold from the settings file.
+    """
+    settings_path = os.path.join(base_path, "settings.pkl")
+    if not os.path.isfile(settings_path):
+        raise FileNotFoundError(f"Settings file not found: {settings_path}")
+    ## load the settings
+    with open(settings_path, 'rb') as f:
+        data_dct = pickle.load(f)
+    grey_threshold = data_dct["grey_threshold"]
+    return grey_threshold
 
 #%% MARK: testing/main
 if __name__ == "__main__":
     # Example usage
-    from matplotlib import pyplot as plt    
-
-    base_path = r"C:\Users\Roni\Desktop\Roni_new\python scripts\pavlovian sunflowers\operant-project\mock_exp"
-    roi = get_roi(r"C:\Users\Roni\Desktop\Roni_new\python scripts\pavlovian sunflowers\operant-project\mock_exp\250513")
+    base_path = r"C:\Users\Roni\Desktop\Roni_new\python scripts\pavlovian sunflowers\operant-project\mock_exp\2025-05-13"
+    roi = get_roi(base_path)
     print(roi)
-    img = cv2.imread(r"C:\Users\Roni\Desktop\Roni_new\python scripts\pavlovian sunflowers\operant-project\mock_exp\250513\imgs\03_02__17_09_52.jpg")
-
-    # analyze_roi(roi, img)
+    grey_thesh = get_grey_threshold(base_path)
+    non_black_pix, relative_area = analyze_roi(roi, base_path, grey_thesh)
+    print(f"Number of non-black pixels: {non_black_pix}")
+    print(f"Relative area of non-black pixels: {relative_area}")
 
 # %%
+
