@@ -32,7 +32,8 @@ def save_imgs(parent_path, f_name, width, height):
     create_folder(path)
     
     try:
-        frame = picam2.capture_array("main")
+        for i in range(5): ## give the camera a few tries to get a stable image
+            frame = picam2.capture_array("main")
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         ###### resize the image - why though? ######
@@ -55,8 +56,7 @@ def save_imgs(parent_path, f_name, width, height):
         print("error when retrying...")
         was_ok = False
         ## We should log this
-    # ADD finnaly?
-    #camera.release()
+    
     return was_ok
 
 
@@ -100,7 +100,7 @@ def show(roi, base_path):
     cv2.imshow("last img", img)
     cv2.waitKey(0)
 
-def show_roi(roi, base_path):
+def show_roi(roi, base_path, save = False):
     ## get last img from the folder
     path = os.path.join(base_path, "imgs")
     img_path = sorted(os.listdir(path))[-1]
@@ -109,8 +109,8 @@ def show_roi(roi, base_path):
     x, y, w, h = roi
     croped_img = img[y:y+h, x:x+w]
 
-    grey_thesh = get_grey_threshold(base_path)
-    croped_thresholded = thresholding_grey_img(croped_img, grey_thesh)
+    grey_thesh = lrc.get_grey_threshold(base_path)
+    croped_thresholded = lrc.thresholding_grey_img(croped_img, grey_thesh)
     croped_thresholded = cv2.cvtColor(croped_thresholded, cv2.COLOR_GRAY2BGR)
 
     img = cv2.hconcat([croped_img, croped_thresholded])
@@ -118,16 +118,21 @@ def show_roi(roi, base_path):
     dark_blue = (150,0,0)
     cv2.line(img, (int(img.shape[1]/2), 0), (int(img.shape[1]/2), int(img.shape[1])), dark_blue, thickness=6)
 
-    _, relative_white = analyze_roi(roi, base_path, grey_thesh)
+    _, relative_white = lrc.analyze_roi(roi, base_path, grey_thesh)
     cv2.putText(img, f"relative white: {relative_white}%", (20, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0,200,200), 1, cv2.LINE_AA)
 
     ## show the image
     cv2.namedWindow("last img", cv2.WINDOW_NORMAL)
     cv2.imshow("last img", img)
-    cv2.waitKey(0)
+    cv2.waitKey(100)
 
+    if save:
+        ## save the image
+        path = os.path.join(base_path, "croped_rois")
+        os.makedirs(path, exist_ok=True)
+        file_path = os.path.join(path, "roi_"+img_path)
+        cv2.imwrite(file_path, img)
     return img
-
 
 
 def capture_imgs(path):
@@ -147,10 +152,10 @@ def capture_imgs(path):
             time.sleep(2)
     print("was ok! NEXT!")
 
-       
+
 def init_log(log_path):
     with open(log_path, 'w') as f:
-        f.write("time, pixel_cnt, pixel_value, light_status\n")
+        f.write("time, pixel_cnt, relative_pixel_value, light_status\n")
 
 def log_data(log_path, values):
     with open(log_path, 'a') as f:
@@ -224,20 +229,22 @@ while True:
         img_time = datetime.now().strftime("%m/%d - %H_%M_%S")
         print(f"last img was taken at:\n{img_time}")
         grey_thesh = lrc.get_grey_threshold(base_path)
-        non_black_pix, relative_white = lrc.analyze_roi(roi, base_path, grey_thesh)
+        white_pix, relative_white = lrc.analyze_roi(roi, base_path, grey_thesh)
         
         show_roi(roi, base_path)
                 
-        ## change the light ?
-        pxl_cnt_thresh = 1000
-        if non_black_pix > pxl_cnt_thresh:
+        ## TODO: should go to the seetings file!
+        relative_white_thresh = 1 # percentage threshold[%]
+        
+        ## change the light 
+        if relative_white > relative_white_thresh:
             GPIO.output(L1, GPIO.LOW)
             Light_status = "off"
         else:
             GPIO.output(L1, GPIO.HIGH)
             Light_status = "on"
 
-        values = (img_time, non_black_pix, relative_white, Light_status)
+        values = (img_time, white_pix, relative_white, Light_status)
         log_data(log_path, values)
 
         previous_pic_time = curr_time
