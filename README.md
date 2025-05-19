@@ -18,8 +18,9 @@ exp_folder/
 - [x] ~~log file~~
 - [x] ~~settings file - should contain roi and threshold~~
 - [x] ~~thesholding file should save the info to the settings file.~~
-- [ ] save the roi and thresholded roi as an image 
-- [ ] show the last roi image
+- [ ] save the roi and thresholded roi as an image
+- [x] ~~show the last roi image~~
+- [ ] add relative_white_thresh to the settings file (and think how to choose it)
 
  ----------------
  
